@@ -1,0 +1,242 @@
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Manhattan Designations</title>
+    <style>
+      html,
+      body,
+      #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+    </style>
+
+    <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css" />
+    <script src="https://js.arcgis.com/4.21/"></script>
+
+    <script>
+      require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esri/layers/FeatureLayer", "esri/layers/VectorTileLayer"], (WebScene, SceneView, SceneLayer, FeatureLayer, VectorTileLayer) => {
+
+        // Add Vector Basemap
+ 
+        const nycBaseMap = new VectorTileLayer({
+            url:"https://tiles.arcgis.com/tiles/uX5kr9HIx4qXytm9/arcgis/rest/services/Manhattan_Basemap/VectorTileServer",
+        });
+
+        // Individual Landmarks Boundaries
+
+        const indLandBounds = new FeatureLayer({
+          url:
+            "https://services5.arcgis.com/CmuSiXApoWtqLYty/arcgis/rest/services/MN_Ind_Landmarks/FeatureServer",
+          elevationInfo: {
+            mode: "on-the-ground",
+
+          },
+          maxScale: 0,
+          minScale: 0,  
+          renderer: {
+              type: "simple",
+              symbol: {
+                type: "polygon-3d",
+                symbolLayers: [{
+                  type: "fill",
+                  material: {
+                    color: [225,145,181, 0.4]
+                  },
+                  outline: {
+                    color: "#7d0139",
+                    width: 1, 
+                    style: "solid"
+                  }
+                }]
+              }
+            }
+        });
+
+        // Historic district boundaries
+
+        const histDistBounds = new FeatureLayer({
+          url:
+            "https://services5.arcgis.com/CmuSiXApoWtqLYty/arcgis/rest/services/MN_HistoricDistricts/FeatureServer",
+          elevationInfo: {
+            mode: "on-the-ground",
+
+          },
+          maxScale: 0,
+          minScale: 0,  
+          renderer: {
+              type: "simple",
+              symbol: {
+                type: "polygon-3d",
+                symbolLayers: [{
+                  type: "fill",
+                  material: {
+                    color: [249,223,97, 0.4]
+                  },
+                  outline: {
+                    color: "#8a7201",
+                    width: 1, 
+                    style: "solid"
+                  }
+                }]
+              }
+            }
+        });
+        
+        // Renderer for Designated Buildings
+
+        var desEdges = {
+          type: "solid",
+          color: [0, 0, 0, 0.5],
+          size: .25
+        };   
+          
+        var histDist = {
+          type: "mesh-3d",
+          symbolLayers: [
+            {
+              type: "fill",
+              material: {
+                color: "#e8a412"
+              },
+              edges: desEdges    
+            } 
+          ]  
+        };
+          
+        var indDes = {
+          type: "mesh-3d",
+          symbolLayers: [
+            {
+              type: "fill",
+              material: {
+                color: "#e51aaf"
+              },
+              edges: desEdges    
+            } 
+          ]  
+        };
+
+
+        const desRenderer = {
+          type: "unique-value",
+          defaultSymbol: {
+            type: "mesh-3d",
+            symbolLayers: [
+              {
+                type: "fill", 
+                material: {
+                  color: "#000" // Color for forts with no year data #baa9a9
+                },
+                edges: desEdges  
+              }
+            ]
+          },
+          field: "DesType",
+          uniqueValueInfos: [
+            {
+              value: "HD",
+              symbol: histDist,
+            },
+            {
+              value: "ID",
+              symbol: indDes,
+            } 
+          ],
+        };
+
+        const desBuildings = new SceneLayer({                    
+            url:"https://tiles.arcgis.com/tiles/uX5kr9HIx4qXytm9/arcgis/rest/services/Designated_3D_Buildings/SceneServer",
+            popupEnabled: true,                          
+            renderer: desRenderer,
+        });
+
+        const nondesBuildings = new SceneLayer({                    
+            url:"https://tiles.arcgis.com/tiles/uX5kr9HIx4qXytm9/arcgis/rest/services/NonDesignated_3D_Buildings/SceneServer",
+            popupEnabled: false,
+            opacity: 0.8,                       
+            //renderer: fort3dYearRenderer,
+        });
+
+        const nondesRenderer = {
+          type: "mesh-3d", // autocasts as new MeshSymbol3D()
+          symbolLayers: [
+            {
+              type: "fill", // autocasts as new FillSymbol3DLayer()
+              // If the value of material is not assigned, the default color will be grey
+              material: {
+                color: [224, 224, 224]
+              },
+              edges: {
+                type: "solid",
+                color: [0, 0, 0, 0.5],
+                size: .5
+              }
+            }
+          ]
+        };
+        // Add the renderer to sceneLayer
+        nondesBuildings.renderer = {
+          type: "simple", // autocasts as new SimpleRenderer()
+          symbol: nondesRenderer
+        };
+
+        var webscene = new WebScene({
+            layers: [ nycBaseMap, histDistBounds, indLandBounds, desBuildings, nondesBuildings ],
+            //basemap: "topo-vector",
+            ground: "world-elevation"
+        });
+
+        webscene.ground.opacity = 0
+
+        const view = new SceneView({
+          container: "viewDiv",
+          map: webscene,
+          camera: {
+            position: {
+              latitude: 40.685738087239216,
+              longitude: -73.95178183902976,
+              z: 3472.1294314190745
+            },
+            tilt: 55.856,
+            heading: 314.582
+          },
+          environment: {
+            background:{
+                type: "color", 
+                color: [255,255,255,1]
+            },
+            lighting: {
+                directShadowsEnabled: false
+              },  
+            atmosphereEnabled: false,
+            starsEnabled: false
+          }
+        });
+
+
+        view.watch('camera.tilt', function(newValue, oldValue, property, object) {
+          console.log(property , newValue);
+        });
+          
+        view.watch('camera.position', function(newValue, oldValue, property, object) {
+          console.log(property , newValue);
+        });
+          
+        view.watch('camera.heading', function(newValue, oldValue, property, object) {
+          console.log(property , newValue);
+        });
+
+
+
+      });
+    </script>
+  </head>
+
+  <body>
+    <div id="viewDiv"></div>
+  </body>
+</html>
