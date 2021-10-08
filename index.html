@@ -18,12 +18,59 @@
     <script src="https://js.arcgis.com/4.21/"></script>
 
     <script>
-      require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esri/layers/FeatureLayer", "esri/layers/VectorTileLayer"], (WebScene, SceneView, SceneLayer, FeatureLayer, VectorTileLayer) => {
+      require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esri/layers/FeatureLayer", "esri/layers/WebTileLayer" /*"esri/layers/VectorTileLayer"*/], (WebScene, SceneView, SceneLayer, FeatureLayer, WebTileLayer/*, VectorTileLayer*/) => {
 
         // Add Vector Basemap
  
-        const nycBaseMap = new VectorTileLayer({
-            url:"https://tiles.arcgis.com/tiles/uX5kr9HIx4qXytm9/arcgis/rest/services/Manhattan_Basemap/VectorTileServer",
+        /*const nycBaseMap = new VectorTileLayer({
+            url:"https://tiles.arcgis.com/tiles/uX5kr9HIx4qXytm9/arcgis/rest/services/Manhattan_Basemap_V2/VectorTileServer",
+        });*/
+
+        /*const stamen = new WebTileLayer({
+          urlTemplate: "https://stamen-tiles-{subDomain}.a.ssl.fastly.net/toner/{level}/{col}/{row}.png",
+          subDomains: ["a", "b", "c", "d"],
+          copyright:
+            `Map tiles by <a href="http://stamen.com/">Stamen Design</a>,
+             under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>.
+             Data by <a href="http://openstreetmap.org/">OpenStreetMap</a>,
+             under <a href="http://creativecommons.org/licenses/by-sa/3.0">CC BY SA</a>.`
+        });*/
+
+        const stamen = new WebTileLayer({
+          urlTemplate: 'http://{subDomain}.basemaps.cartocdn.com/light_all/{level}/{col}/{row}.png',
+          subDomains: ["a","b","c"],
+          copyright: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="http://cartodb.com/attributions">CartoDB</a>',
+          visible: true
+        })
+
+        // Individual Landmarks Boundaries
+
+        const manhattanMask = new FeatureLayer({
+          url:
+            "https://services5.arcgis.com/CmuSiXApoWtqLYty/arcgis/rest/services/Manhattan_Mask/FeatureServer",
+          elevationInfo: {
+            mode: "on-the-ground",
+
+          },
+          maxScale: 0,
+          minScale: 0,  
+          renderer: {
+              type: "simple",
+              symbol: {
+                type: "polygon-3d",
+                symbolLayers: [{
+                  type: "fill",
+                  material: {
+                    color: [255,255,255, 1]
+                  },
+                  outline: {
+                    color: "#000",
+                    width: 2, 
+                    style: "solid"
+                  }
+                }]
+              }
+            }
         });
 
         // Individual Landmarks Boundaries
@@ -91,7 +138,7 @@
         var desEdges = {
           type: "solid",
           color: [0, 0, 0, 0.5],
-          size: .25
+          size: .5
         };   
           
         var histDist = {
@@ -185,8 +232,8 @@
         };
 
         var webscene = new WebScene({
-            layers: [ nycBaseMap, histDistBounds, indLandBounds, desBuildings, nondesBuildings ],
-            //basemap: "topo-vector",
+            layers: [ /*nycBaseMap,*/manhattanMask, stamen, histDistBounds, indLandBounds, desBuildings, nondesBuildings ],
+            basemap: stamen,
             ground: "world-elevation"
         });
 
@@ -195,6 +242,7 @@
         const view = new SceneView({
           container: "viewDiv",
           map: webscene,
+          qualityProfile: "low",
           camera: {
             position: {
               latitude: 40.685738087239216,
@@ -210,7 +258,7 @@
                 color: [255,255,255,1]
             },
             lighting: {
-                directShadowsEnabled: false
+                directShadowsEnabled: true
               },  
             atmosphereEnabled: false,
             starsEnabled: false
