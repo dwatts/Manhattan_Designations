@@ -1,4 +1,4 @@
-require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esri/layers/FeatureLayer", "esri/layers/WebTileLayer" /*"esri/layers/VectorTileLayer"*/], (WebScene, SceneView, SceneLayer, FeatureLayer, WebTileLayer/*, VectorTileLayer*/) => {
+require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esri/layers/FeatureLayer", "esri/layers/WebTileLayer", "esri/core/watchUtils"], (WebScene, SceneView, SceneLayer, FeatureLayer, WebTileLayer, watchUtils) => {
 
   // Add Vector Basemap
 
@@ -267,7 +267,7 @@ require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esr
 
   const desBuildings = new SceneLayer({                    
     url: "https://tiles.arcgis.com/tiles/uX5kr9HIx4qXytm9/arcgis/rest/services/Designated_3D_Buildings/SceneServer",
-    outFields: ["*"], 
+    //outFields: ["*"], 
     popupTemplate: desBuildingTemplate,
     /*popupTemplate: {
       content: "<h1>{des_name}</h1>"
@@ -317,33 +317,117 @@ require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esr
         ''
       );
 
+      /*****Create Link to full Luna Collection******/
+
+      var linkStart = "https://nyclandmarks.lunaimaging.com/luna/servlet/view/search?q=lp_number=%22"
+      var lpNum = results.lp_num
+      var linkEnd = "%22"
+
+      var fullLink = linkStart + lpNum + linkEnd;
+
+      /*****Code to Get Luna Images******/
+
+      var rootStart = "https://nyclandmarks.lunaimaging.com/luna/servlet/as/search?q=landmark_type%3D"
+  
+      var bin = results.BIN
+      var desType = (results.DesType == "IL") ? "Individual+Landmark" : "Historic+District";
+
+      var and = "+AND+bin%3D"
+      //console.log(bin);
+
+      var rootEnd = "&os=0&bs=10&excludeFacets=1&excludeMetadata=1"
+
+      console.log(rootStart+desType+and+bin+rootEnd);
+
+      //Luna URL and Ajax Code
+
+      var getUrl = function () {
+        var tmp = [];
+        $.ajax({
+            'async': false,
+            'type': "GET",
+            //'global': false,
+            'dataType': 'json',
+            'url': rootStart+desType+and+bin+rootEnd,
+            success: function(data) {  
+              $.each(data.results, function(index, value) {
+                tmp.push(value.urlSize4);
+              });
+            },
+        });
+        return tmp;
+      }();
+
+      var length = getUrl.length
+      console.log(getUrl);
+
+      //Set initial Image Source 
+
+      let image = getUrl[0];
+   
+      //Slide Code//
+
+      let slides = getUrl;
+      let currentSlideIndex = 0;
+      
+
+      function show_image(direction) {
+        
+        let currentImage = document.getElementById("slideImg");
+        currentImage.src = slides[currentSlideIndex];
+
+        if (direction == 'left') {
+          currentSlideIndex--;
+        }
+        else {
+          currentSlideIndex++;
+          currentSlideIndex %= slides.length;
+        }
+        if (currentSlideIndex < 0) {
+          currentSlideIndex = slides.length - 1;
+        }
+        currentImage.src = slides[currentSlideIndex];
+        
+        counter = currentSlideIndex +1;
+        $('#counterText').text(counter);
+      };
+
+      length = getUrl.length;
+
+      $(document).on("click" , '#left' , function(){
+        show_image('left'); 
+      });
+
+      $(document).on("click" , '#right' , function(){
+        show_image('right'); 
+      });
+
+      /*****End code to Get Luna Images******/
+
       var popupElement = document.createElement("div");
 
       if (results.DesType == "IL") {
-        popupElement.innerHTML = "<img class='popupImage' src='" + results.url_image + "'/><h1>" + results.des_name + " (" + results.lp_num + ")</h1><h2>Designation Date: " + results.des_date + "</h2>" + buildingName + "<h2>" + results.des_addres + "</h2><h2>Constructed: " + results.date_combo + "</h2><h2>Architect/Builder: " + results.arch_build + "</h2> <h2>Owner/Developer: " + results.own_devel + "</h2>" + styles + materials + altered + notes + "<h2><a href=" + results.url_report + " target='_blank'>Read the designation report</a></h2>";
+        popupElement.innerHTML = "<img id='slideImg' src='" + image + "' class='popupImage'></img><div id='buttonHolder'><button id='left'><i class='fa-solid fa-circle-arrow-left'></i></button><div id='counterHolder'><h4>Image</h4><h4 id='counterText'>1</h4><h4>/</h4><h4 id='totaltext'>" + length + "</h4></div><button id='right'><i class='fa-solid fa-circle-arrow-right'></i></button></div><h2><a href=" + fullLink + " target='_blank'>See the entire image collection</a></h2><h1>" + results.des_name + " (" + results.lp_num + ")</h1><h2>Designation Date: " + results.des_date + "</h2>" + buildingName + "<h2>" + results.des_addres + "</h2><h2>Constructed: " + results.date_combo + "</h2><h2>Architect/Builder: " + results.arch_build + "</h2> <h2>Owner/Developer: " + results.own_devel + "</h2>" + styles + materials + altered + notes + "<h2><a href=" + results.url_report + " target='_blank'>Read the designation report</a></h2>";
       } else if (results.DesType == "HD") {
-        popupElement.innerHTML = "<h1>" + results.des_name + " (" + results.lp_num + ")</h1><h2>Designation Date: " + results.des_date + "</h2>" + buildingName + "<h2>" + results.des_addres + "</h2><h2>Constructed: " + results.date_combo + "</h2><h2>Architect/Builder: " + results.arch_build + "</h2> <h2>Owner/Developer: " + results.own_devel + "</h2>" + styles + materials + altered + notes + "<h2><a href=" + results.url_report + " target='_blank'>Read the designation report</a></h2>";
+        popupElement.innerHTML = "<img id='slideImg' src='" + image + "' class='popupImage'></img><div id='buttonHolder'><button id='left'><i class='fa-solid fa-circle-arrow-left'></i></button><div id='counterHolder'><h4>Image</h4><h4 id='counterText'>1</h4><h4>/</h4><h4 id='totaltext'>" + length + "</h4></div><button id='right'><i class='fa-solid fa-circle-arrow-right'></i></button></div><h2><a href=" + fullLink + " target='_blank'>See the entire image collection</a></h2><h1>" + results.des_name + " (" + results.lp_num + ")</h1><h2>Designation Date: " + results.des_date + "</h2>" + buildingName + "<h2>" + results.des_addres + "</h2><h2>Constructed: " + results.date_combo + "</h2><h2>Architect/Builder: " + results.arch_build + "</h2> <h2>Owner/Developer: " + results.own_devel + "</h2>" + styles + materials + altered + notes + "<h2><a href=" + results.url_report + " target='_blank'>Read the designation report</a></h2>";
       } else {
         popupElement.innerHTML = "<h1>" + results.des_name + "</h1>";
       }
-      
+
       return popupElement;
   };
-
 
   const nondesBuildings = new SceneLayer({                    
       url:"https://tiles.arcgis.com/tiles/uX5kr9HIx4qXytm9/arcgis/rest/services/NonDesignated_3D_Buildings/SceneServer",
       popupEnabled: false,
       opacity: 0.8,                       
-      //renderer: fort3dYearRenderer,
   });
 
   const nondesRenderer = {
-    type: "mesh-3d", // autocasts as new MeshSymbol3D()
+    type: "mesh-3d",
     symbolLayers: [
       {
-        type: "fill", // autocasts as new FillSymbol3DLayer()
-        // If the value of material is not assigned, the default color will be grey
+        type: "fill",
         material: {
           color: [224, 224, 224]
         },
@@ -355,14 +439,21 @@ require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esr
       }
     ]
   };
-  // Add the renderer to sceneLayer
+
   nondesBuildings.renderer = {
-    type: "simple", // autocasts as new SimpleRenderer()
+    type: "simple",
     symbol: nondesRenderer
   };
 
+  const hbdb = new FeatureLayer({
+      url: "https://services5.arcgis.com/Oos4pNA2538iVFA1/arcgis/rest/services/LPC_HistoricBuildings_Service/FeatureServer",
+      outFields: ["*"],
+      visible: false,
+      definitionExpression: "Borough = 'MN'"
+  });
+
   var webscene = new WebScene({
-      layers: [ /*nycBaseMap,*/ manhattanMask, stamen, histDistBounds, indLandBounds, desBuildings, nondesBuildings, interiorPoints ],
+      layers: [ /*nycBaseMap,*/ manhattanMask, stamen, hbdb, histDistBounds, indLandBounds, desBuildings, nondesBuildings, interiorPoints ],
       basemap: stamen,
       ground: "world-elevation"
   });
@@ -375,12 +466,12 @@ require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esr
     qualityProfile: "low",
     camera: {
       position: {
-        latitude: 40.685738087239216,
-        longitude: -73.95178183902976,
-        z: 3472.1294314190745
+        latitude: 40.6982448055282,
+        longitude: -73.99870704505963,
+        z: 2107.3311000000685
       },
-      tilt: 55.856,
-      heading: 314.582
+      tilt: 39.93249999998931,
+      heading: 334.2607865495843
     },
     popup: {
         collapseEnabled: false,
@@ -405,7 +496,6 @@ require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esr
 
   view.popup.viewModel.includeDefaultActions = false;
 
-
   /* Change Interior Points Renderer */
 
   view.when().then(function() {     
@@ -423,6 +513,14 @@ require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esr
   });
 
 
+  watchUtils.whenTrue(view.popup,'visible', function(){
+    watchUtils.whenFalseOnce(view.popup,'visible', function(){
+      getUrl = [];
+      console.info(getUrl);
+    })
+  });
+
+
   view.watch('camera.tilt', function(newValue, oldValue, property, object) {
     console.log(property , newValue);
   });
@@ -434,6 +532,157 @@ require(["esri/WebScene", "esri/views/SceneView", "esri/layers/SceneLayer", "esr
   view.watch('camera.heading', function(newValue, oldValue, property, object) {
     console.log(property , newValue);
   });
+
+  /****************Zoom to Layer Code for Filter**********/ 
+
+  /*function zoomToLayer(layerView) {
+    return layerView.queryExtent().then(function (response) {
+      view.goTo(response.extent).catch(function (error) {
+        if (error.name != "AbortError") {
+          console.error(error);
+        }
+      });
+    });
+  }*/  
+
+  //Looping Code 1//
+
+  /*view
+  .when(function() {
+    return hbdb.when(function() {
+      var query = hbdb.createQuery();
+      return hbdb.queryFeatures(query);
+    });
+  })
+  .then(getValues)
+  .then(getUniqueValues)
+  .then(addToSelect);
+
+  function getValues(response) {
+    var features = response.features;
+    var values = features.map(function(feature) {
+      return feature.attributes.Hist_Dist;
+    });
+    return values;
+  }
+
+  function getUniqueValues(values) {
+    var uniqueValues = [];
+
+    values.forEach(function(item, i) {
+      if (
+        (uniqueValues.length < 1 || uniqueValues.indexOf(item) === -1) &&
+        item !== ""
+      ) {
+        uniqueValues.push(item);
+      }
+    });
+    return uniqueValues;
+  }
+
+  function addToSelect(values) {
+    values.sort();
+    values.forEach(function(value) {
+      var option = document.createElement("option");
+      option.text = value;
+      filterOne.add(option);
+    });
+  }
+
+  //Looping Code 2
+
+  view
+    .when(function() {
+      return hbdb.when(function() {
+        var queryTwo = hbdb.createQuery();
+        return hbdb.queryFeatures(queryTwo);
+      });
+    })
+    .then(getValuesTwo)
+    .then(getUniqueValuesTwo)
+    .then(addToSelectTwo);
+
+  function getValuesTwo(response) {
+    var features = response.features;
+    var values = features.map(function(feature) {
+      return feature.attributes.Mat_Prim;
+    });
+    return values;
+  }
+
+  function getUniqueValuesTwo(values) {
+    var uniqueValues = [];
+
+    values.forEach(function(item, i) {
+      if (
+        (uniqueValues.length < 1 || uniqueValues.indexOf(item) === -1) &&
+        item !== ""
+      ) {
+        uniqueValues.push(item);
+      }
+    });
+    return uniqueValues;
+  }
+
+  function addToSelectTwo(values) {
+    values.sort();
+    values.forEach(function(value) {
+      var option = document.createElement("option");
+      option.text = value;
+      filterThree.add(option);
+    });
+  }*/
+
+  ///////////  Filter Code ///////////
+
+  /*let flView = null;
+  view.whenLayerView(desBuildings).then(layerView => flView = layerView);
+
+  // filter logic
+
+  let selectedHD = null;
+  let selectedEra = null;
+  let selectedMat = null;
+  const updateFilter = function() {
+    let conditions = [];
+    if (selectedHD) {
+      conditions.push(`(hist_dist='${selectedHD}')`);
+    }
+    if (selectedEra) {
+      conditions.push(`(ERA='${selectedEra}')`);
+    }
+    //Start third filter test//
+    if (selectedMat) {
+      conditions.push(`(mat_prim='${selectedMat}')`);
+    }
+    //End third filter test//
+    flView.filter = conditions.length > 0 ? {where: conditions.join("AND")} : null;
+    console.log(flView.filter && flView.filter.where);
+  }
+
+  // click event handlers
+
+  const filterByHD = (event) => {
+    selectedHD = event.target.value;
+    updateFilter();
+  }
+  const filterByEra = (event) => {
+    selectedEra = event.target.value;
+    updateFilter();
+  }
+  const filterByMat = (event) => {
+    selectedMat = event.target.value;
+    updateFilter();
+  }
+
+  // listen click events
+
+  filterOne.addEventListener('click', filterByHD);
+  filterTwo.addEventListener("click", filterByEra);
+  filterThree.addEventListener("click", filterByMat);
+
+  */
+  //////////// End Filter Code //////////////
 
 
 

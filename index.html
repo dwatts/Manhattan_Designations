@@ -5,13 +5,51 @@
     <title>Manhattan Designations</title>
 
     <link rel="stylesheet" href="https://js.arcgis.com/4.21/esri/themes/light/main.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="style.css">
   </head>
 
   <body>
     <div id="viewDiv"></div>
 
-    <script src="https://js.arcgis.com/4.21/"></script>
+    <div id="filterDiv">
+      <!--<select id="filterOne" class="dropdown">
+        <option value="Greenwich Village Historic District">Greenwich Village Historic District</option>
+        <option value="Greenwich Village Historic District Extension">Greenwich Village Historic District Extension</option>
+        <option value="Greenwich Village Historic District Extension II">Greenwich Village Historic District Extension II</option>
+      </select>
+
+      <select id="filterTwo" class="dropdown">
+        <option value="">All</option>
+        <option value="1876 - 1900">1876 - 1900</option>
+        <option value="1901 - 1925">1901 - 1925</option>
+        <option value="1926 - 1950">1926 - 1950</option>
+      </select>--> 
+
+      
+
+      <!--<select id="filterOne" class="dropdown">
+        <option value="">(select a Historic District)</option>
+      </select>
+      <select id="filterTwo" class="dropdown">
+        <option value="">(Select an era)</option>
+        <option value="1700 - 1750">1700 - 1750</option>
+        <option value="1751 - 1800">1751 - 1800</option>
+        <option value="1801 - 1850">1801 - 1850</option>
+        <option value="1851 - 1900">1851 - 1900</option>
+        <option value="1901 - 1950">1901 - 1950</option>
+        <option value="1951 - Present">1951 - Present</option>
+        <option value="Not Determined">Not Determined</option>
+      </select>
+      <select id="filterThree" class="dropdown">
+          <option value="">(select a material)</option>
+      </select>-->
+
+
+    </div> 
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://js.arcgis.com/4.20/"></script>
     <script src="script.js"></script>
   </body>
 </html>

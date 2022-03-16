@@ -14,3 +14,81 @@ h1 {
 h2 {
   font-size: 12px;
 }
+
+h4 {
+  font-size: 11px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  margin-left: 3px;
+  margin-right: 3px;
+}
+
+#filterDiv {
+  position: absolute;
+  z-index: 2;
+  right: 20px;
+  top: 20px;
+}
+
+.popupImage {
+  width: 100%;
+}
+
+.esri-view-width-xlarge .esri-popup__main-container,
+.esri-view-width-large .esri-popup__main-container,
+.esri-view-width-medium .esri-popup__main-container
+{
+  max-height: 100% !important;
+  width: 400px !important;
+}
+
+#buttonHolder {
+  display: flex;
+  justify-content: space-between;
+  padding-left: 50px;
+  padding-right: 50px;
+  padding-top: 8px;
+  align-items: center;
+}
+
+#counterHolder {
+  width: 81px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.fa-circle-arrow-left {
+    font-size: 20px;
+}
+
+.fa-circle-arrow-right {
+  font-size: 20px;
+}
+
+#left {
+    border-radius: 50%;
+    background-color: #ffffff;
+    text-align: center;
+    text-decoration: none;
+    padding: 4px;
+    border: 0px;
+    cursor: pointer;
+}
+
+#left:hover {
+  background-color: aquamarine;
+}
+
+#right {
+    border-radius: 50%;
+    background-color: #ffffff;
+    text-align: center;
+    text-decoration: none;
+    padding: 4px;
+    border: 0px;
+    cursor: pointer;
+}
+
+#right:hover {
+  background-color: aquamarine;
+}
